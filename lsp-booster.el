@@ -32,6 +32,8 @@
 ;;
 ;;; Code:
 
+(require 'lsp-mode)
+
 (defun lsp-booster--json-parse (fn &rest args)
   "Advise (FN ARGS) to parse bytecode instead of JSON."
   (or
@@ -44,13 +46,14 @@
 (defun lsp-booster--final-command (fn cmd &optional test?)
   "Advise FN to prepend `emacs-lsp-booster' to CMD if TEST? is nil."
   (let ((orig-result (funcall fn cmd test?)))
-    (if (and (not test?) ;; for check lsp-server-present?
-             ;; see lsp-resolve-final-command, it would add extra shell wrapper
-             (not (file-remote-p default-directory))
+    (if (and (not test?)                              ; for check lsp-server-present?
+             (not (file-remote-p default-directory))  ; see lsp-resolve-final-command, it would add extra shell wrapper
              lsp-use-plists
-             (not (functionp 'json-rpc-connection)) ;; native json-rpc
+             (not (functionp 'json-rpc-connection))   ; native json-rpc
              (executable-find "emacs-lsp-booster"))
         (progn
+          (when-let ((command-from-exec-path (executable-find (car orig-result))))  ; resolve command from exec-path (in case not found in $PATH)
+            (setcar orig-result command-from-exec-path))
           (message "Using emacs-lsp-booster for %s!" orig-result)
           (cons "emacs-lsp-booster" orig-result))
       orig-result)))
@@ -75,8 +78,8 @@ if the argument is omitted or nil or a positive integer)."
   (setq lsp-booster--json-parser
         (if (progn (require 'json)
                    (fboundp 'json-parse-buffer))
-            'json-parse-buffer
-          'json-read))
+            #'json-parse-buffer
+          #'json-read))
 
   (let ((workspaces (and (featurep 'lsp-mode)
                          (lsp-booster--workspace-shutdown-all))))
@@ -88,11 +91,11 @@ if the argument is omitted or nil or a positive integer)."
       (message "lsp-booster-mode on")
       (advice-add lsp-booster--json-parser :around
                   #'lsp-booster--json-parse)
-      (advice-add 'lsp-resolve-final-command :around
+      (advice-add #'lsp-resolve-final-command :around
                   #'lsp-booster--final-command))
      (t
       (message "lsp-booster-mode off")
-      (advice-remove 'lsp-resolve-final-command
+      (advice-remove #'lsp-resolve-final-command
                      #'lsp-booster--final-command)
       (advice-remove lsp-booster--json-parser
                      #'lsp-booster--json-parse)))

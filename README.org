@@ -1,1 +1,15 @@
-# lsp-booster.el
+* lsp-booster.el
+
+The lsp-booster minor mode. The minor mode allows on-fly activation and deactivation of LSP booster (github.com/blahgeek/emacs-lsp-booster).
+
+** Install
+
+#+begin_src elisp
+  (use-package lsp-booster
+    :straight (lsp-booster
+               :host github
+               :repo "okomestudio/lsp-booster.el"
+               :post-build (("make")))
+    :commands (lsp-booster-mode)
+    :init (lsp-booster-mode 1))
+#+end_src
