@@ -3,10 +3,12 @@
 ;; Copyright (C) 2024 Taro Sato
 ;;
 ;; Author: Taro Sato <okomestudio@gmail.com>
-;; Version: Alpha
-;; Package-Requires: ((emacs "29.1")
-;; Keywords: utility
 ;; URL: https://github.com/okomestudio/lsp-booster.el
+;; Version: 1.0
+;; Keywords: utility
+;; Package-Requires: ((emacs "29.1") (lsp-mode "9.0.1"))
+;;
+;;; License:
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
@@ -25,9 +27,10 @@
 ;;
 ;;; Commentary:
 ;;
-;; `lsp-booster' minor mode. See github.com/blahgeek/emacs-lsp-booster.
+;; `lsp-booster' minor mode. See and install the `emacs-lsp-booster'
+;; program from https://github.com/blahgeek/emacs-lsp-booster.
 ;;
-;; The goal of this minor mode is to allow on-fly activation and
+;; The purpose of this minor mode is to allow on-fly activation and
 ;; deactivation of LSP booster.
 ;;
 ;;; Code:
@@ -55,7 +58,9 @@
           (when-let ((command-from-exec-path (executable-find (car orig-result))))  ; resolve command from exec-path (in case not found in $PATH)
             (setcar orig-result command-from-exec-path))
           (message "Using emacs-lsp-booster for %s!" orig-result)
-          (cons "emacs-lsp-booster" orig-result))
+          (if (version< emacs-version "30")
+              (cons "emacs-lsp-booster" orig-result)
+            (append '("emacs-lsp-booster" "--disable-bytecode" "--") orig-result)))
       orig-result)))
 
 (defun lsp-booster--workspace-shutdown-all ()
@@ -89,16 +94,19 @@ if the argument is omitted or nil or a positive integer)."
         (setq lsp-booster-mode nil)
         (user-error "`emacs-lsp-booster' is not found"))
       (message "lsp-booster-mode on")
-      (advice-add lsp-booster--json-parser :around
-                  #'lsp-booster--json-parse)
+
+      (if (version< emacs-version "30")
+          (advice-add lsp-booster--json-parser :around
+                      #'lsp-booster--json-parse))
       (advice-add #'lsp-resolve-final-command :around
                   #'lsp-booster--final-command))
      (t
       (message "lsp-booster-mode off")
       (advice-remove #'lsp-resolve-final-command
                      #'lsp-booster--final-command)
-      (advice-remove lsp-booster--json-parser
-                     #'lsp-booster--json-parse)))
+      (if (version< emacs-version "30")
+          (advice-remove lsp-booster--json-parser
+                         #'lsp-booster--json-parse))))
     (when workspaces
       (lsp-deferred))))
 
