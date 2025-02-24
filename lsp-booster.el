@@ -1,12 +1,12 @@
 ;;; lsp-booster.el --- LSP Booster minor mode  -*- lexical-binding: t -*-
 ;;
-;; Copyright (C) 2024 Taro Sato
+;; Copyright (C) 2024, 2025 Taro Sato
 ;;
 ;; Author: Taro Sato <okomestudio@gmail.com>
 ;; URL: https://github.com/okomestudio/lsp-booster.el
-;; Version: 1.0
+;; Version: 1.1
 ;; Keywords: utility
-;; Package-Requires: ((emacs "29.1") (lsp-mode "9.0.1"))
+;; Package-Requires: ((emacs "30.1") (lsp-mode "9.0.1"))
 ;;
 ;;; License:
 ;;
